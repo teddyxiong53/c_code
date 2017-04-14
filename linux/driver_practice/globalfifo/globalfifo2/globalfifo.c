@@ -195,7 +195,26 @@ static int globalfifo_ioctl (struct inode * inodep, struct file *filp, unsigned 
 	
 	return 0;
 }
-
+static unsigned int globalfifo_poll(struct file *filp, poll_table *wait)
+{
+	unsigned int mask = 0;
+	struct globalfifo_dev *dev = filp->private_data;
+	down(dev->sem);
+	poll_wait(filp, &dev->r_wait, wait);
+	poll_wait(filp, &dev->w_wait, wait);
+	/* fifo not empty */
+	if(dev->current_len != 0)
+	{
+		mask |= POLLIN | POLLRDNORM;
+	}
+	/*fifo not full*/
+	if(dev->current_len != GLOBALFIFO_SIZE)
+	{
+		mask |= POLLOUT | POLLWRNORM;
+	}
+	up(dev->sem);
+	return mask;
+}
 static int globalfifo_open (struct inode * inodep , struct file * filp)
 {
 	filp->private_data = globalfifo_devp;
@@ -216,6 +235,7 @@ struct file_operations globalfifo_fops =
 	.read = globalfifo_read,
 	.write = globalfifo_write,
 	.compat_ioctl = globalfifo_ioctl,
+	.poll = globalfifo_poll,
 	.open = globalfifo_open,
 	.release = globalfifo_release,
 };
