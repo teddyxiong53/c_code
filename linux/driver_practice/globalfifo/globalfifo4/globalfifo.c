@@ -235,59 +235,78 @@ struct file_operations globalfifo_fops =
 
 
 
+static int __devinit globalfifo_probe(struct platform_device *pdev)
+{
+    dev_t devno = MKDEV(globalfifo_major, 0);
+    int ret = -1;
+    if(globalfifo_major)
+    {
+        ret = register_chrdev_region(devno, 1, "globalfifo");
+    }
+    else
+    {
+        ret = alloc_chrdev_region(&devno, 0, 1, "globalfifo");
+        globalfifo_major = MAJOR(devno);
+    }
+    if(ret )
+    {
+        printk(KERN_ERR "register_chrdev_region failed \n");
+        return ret;
+    }
+    globalfifo_devp = kmalloc(sizeof(struct globalfifo_dev), GFP_KERNEL);
+    if(globalfifo_devp == NULL)
+    {
+        printk(KERN_ERR "kmalloc failed \n");
+        goto fail_malloc;
+    }
+    memset(globalfifo_devp, 0, sizeof(struct globalfifo_dev));
+    globalfifo_devp->cdev.owner = THIS_MODULE;
+    cdev_init(&globalfifo_devp->cdev, &globalfifo_fops);
+    ret = cdev_add(&globalfifo_devp->cdev, devno, 1);
+    if(ret)
+    {
+        printk(KERN_ERR "cdev_add failed \n");
+        return ret;
+    }
+    sema_init(&globalfifo_devp->sem, 1);
+    init_waitqueue_head(&globalfifo_devp->r_wait);
+    init_waitqueue_head(&globalfifo_devp->w_wait);
+    printk(KERN_EMERG "xhl -- gm init \n");
+    return 0;
+    
+fail_malloc:
+    unregister_chrdev_region(devno, 1);
+    return ret;
+}
 
 
+static int __devexit globalfifo_remove(struct platform_device *pdev)
+{
+    printk(KERN_EMERG     "xhl -- globalfifo exit \n");
+    cdev_del(&globalfifo_devp->cdev);
+    kfree(globalfifo_devp);
+    unregister_chrdev_region(MKDEV(globalfifo_major, 0), 1);
+    return 0;
+}
+
+static struct platform_driver globalfifo_device_driver = 
+{
+    .probe = globalfifo_probe,
+    .remove = globalfifo_remove,
+    .driver =
+    {
+        .name = "globalfifo",
+        .owner = THIS_MODULE,
+    }
+};
 int globalfifo_init(void)
 {
-	dev_t devno = MKDEV(globalfifo_major, 0);
-	int ret = -1;
-	if(globalfifo_major)
-	{
-		ret = register_chrdev_region(devno, 1, "globalfifo");
-	}
-	else
-	{
-		ret = alloc_chrdev_region(&devno, 0, 1, "globalfifo");
-		globalfifo_major = MAJOR(devno);
-	}
-	if(ret )
-	{
-		printk(KERN_ERR "register_chrdev_region failed \n");
-		return ret;
-	}
-	globalfifo_devp = kmalloc(sizeof(struct globalfifo_dev), GFP_KERNEL);
-	if(globalfifo_devp == NULL)
-	{
-		printk(KERN_ERR "kmalloc failed \n");
-		goto fail_malloc;
-	}
-	memset(globalfifo_devp, 0, sizeof(struct globalfifo_dev));
-	globalfifo_devp->cdev.owner = THIS_MODULE;
-	cdev_init(&globalfifo_devp->cdev, &globalfifo_fops);
-	ret = cdev_add(&globalfifo_devp->cdev, devno, 1);
-	if(ret)
-	{
-		printk(KERN_ERR "cdev_add failed \n");
-		return ret;
-	}
-	sema_init(&globalfifo_devp->sem, 1);
-	init_waitqueue_head(&globalfifo_devp->r_wait);
-	init_waitqueue_head(&globalfifo_devp->w_wait);
-	printk(KERN_EMERG "xhl -- gm init \n");
-	return 0;
-	
-fail_malloc:
-	unregister_chrdev_region(devno, 1);
-	return ret;
+    return platform_driver_register(&globalfifo_device_driver);
 }
 
 void globalfifo_exit(void)
 {
-	printk(KERN_EMERG     "xhl -- gm exit \n");
-	cdev_del(&globalfifo_devp->cdev);
-	kfree(globalfifo_devp);
-	unregister_chrdev_region(MKDEV(globalfifo_major, 0), 1);
-
+    platform_driver_unregister(&globalfifo_device_driver);
 }
 
 module_init(globalfifo_init);
