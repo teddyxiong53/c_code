@@ -1,0 +1,40 @@
+from building import *
+
+src = Split("""
+src/arch/sys_arch.c
+src/api/sockets.c
+src/api/tcpip.c
+src/core/dns.c
+src/netif/ethernetif.c
+src/core/netif.c
+src/api/netifapi.c
+src/api/netdb.c
+src/core/def.c
+src/core/timeouts.c
+
+""")
+
+ipv4_src = Split("""
+src/core/ipv4/ip4_addr.c
+""")
+
+
+
+
+src = src + ipv4_src
+
+# The set of source files associated with this SConscript file.
+path = [GetCurrentDir() + '/src',
+    GetCurrentDir() + '/src/include',
+    GetCurrentDir() + '/src/include/ipv4',
+    GetCurrentDir() + '/src/arch/include',
+    GetCurrentDir() + '/src/include/netif']
+
+if not GetDepend('RT_USING_POSIX') or not GetDepend('RT_USING_DFS_NET'):
+    path += [GetCurrentDir() + '/src/include/posix']
+
+path += [GetCurrentDir() + '/src/include']
+
+group = DefineGroup('lwIP', src, depend = ['RT_USING_LWIP', 'RT_USING_MYLWIP'], CPPPATH = path)
+
+Return('group')
