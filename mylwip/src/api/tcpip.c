@@ -27,8 +27,12 @@ static void tcpip_thread(void *arg)
     {
         tcpip_init_done(tcpip_init_done_arg);
     }
-    printf("lwip[debug] -- tcpip init done \n");
+    
+    rt_kprintf("lwip[debug] -- tcpip init done \n");
+
+    #if 0
     LOCK_TCPIP_CORE();
+    
     while(1)
     {
         UNLOCK_TCPIP_CORE();
@@ -36,26 +40,30 @@ static void tcpip_thread(void *arg)
         LOCK_TCPIP_CORE();
         if(msg == NULL)
         {
-            printf("lwip[warn] -- tcpip_thread invalid msg \n");
+            //rt_kprintf("lwip[warn] -- tcpip_thread invalid msg \n");
             continue;
         }
         switch(msg->type)
         {
             default:
-                printf("lwip[error] -- wrong msg type\n");
+                rt_kprintf("lwip[error] -- wrong msg type\n");
                 break;
         }
     }
+    #endif
 }
 err_t  tcpip_input(struct pbuf *p, struct netif *inp)
 {
     return 0;
 }
 
+void lwip_init()
+{
+}
 void tcpip_init(tcpip_init_done_fn initfunc, void *arg)
 {
     err_t ret;
-    //lwip_init();
+    lwip_init();
 
     
     tcpip_init_done = initfunc;
@@ -63,7 +71,13 @@ void tcpip_init(tcpip_init_done_fn initfunc, void *arg)
     ret = sys_mbox_new(&mbox, TCPIP_MBOX_SIZE);
     if(ret < 0)
     {
-        printf("lwip -- failed to create mbox\n");
+        rt_kprintf("lwip -- failed to create mbox\n");
+        return;
+    }
+    ret = sys_mutex_new(&lock_tcpip_core);
+    if(ret < 0)
+    {
+        rt_kprintf("lwip -- failed to create lock_tcpip_core \n");
         return;
     }
     sys_thread_new("tcpip", tcpip_thread, NULL, 1024, 8);
