@@ -375,7 +375,7 @@
  * The formula expects settings to be either '0' or '1'.
  */
 #if !defined MEMP_NUM_SYS_TIMEOUT || defined __DOXYGEN__
-#define MEMP_NUM_SYS_TIMEOUT            (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + (PPP_SUPPORT*6*MEMP_NUM_PPP_PCB) + (LWIP_IPV6 ? (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD) : 0))
+#define MEMP_NUM_SYS_TIMEOUT            (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + (PPP_SUPPORT*6/**MEMP_NUM_PPP_PCB*/) + (LWIP_IPV6 ? (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD) : 0))
 #endif
 
 /**
@@ -2812,5 +2812,27 @@
 /**
  * @}
  */
+extern char *basename(char *s);
+
+#define myprintf(...) do {\
+                        rt_kprintf("[%s][%s][%d]: ", basename(__FILE__), __func__, __LINE__);\
+                        rt_kprintf(__VA_ARGS__);\
+                        rt_kprintf("\n");\
+                       }while(0)
+#define mylogd(...) do {\
+                            rt_kprintf("[DEBUG][%s][%s][%d]: ", basename(__FILE__), __func__, __LINE__);\
+                            rt_kprintf(__VA_ARGS__);\
+                            rt_kprintf("\n");\
+                           }while(0)
+#define myloge(...) do {\
+                            rt_kprintf("[ERROR][%s][%s][%d]: ", basename(__FILE__), __func__, __LINE__);\
+                            rt_kprintf(__VA_ARGS__);\
+                            rt_kprintf("\n");\
+                           }while(0)
+#define mylogw(...) do {\
+                            rt_kprintf("[WARN][%s][%s][%d]: ", basename(__FILE__), __func__, __LINE__);\
+                            rt_kprintf(__VA_ARGS__);\
+                            rt_kprintf("\n");\
+                           }while(0)
 
 #endif /* LWIP_HDR_OPT_H */

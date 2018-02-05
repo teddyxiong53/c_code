@@ -57,8 +57,37 @@ err_t  tcpip_input(struct pbuf *p, struct netif *inp)
     return 0;
 }
 
-void lwip_init()
+err_t tcpip_callback_with_block
+(
+    tcpip_callback_fn func,
+    void *ctx,
+    u8_t block
+)
 {
+    struct tcpip_msg *msg;
+    msg = (struct tcpip_msg *)memp_malloc(MEMP_TCPIP_MSG_API);
+    if(msg == NULL)
+    {
+        myloge("memp_alloc failed");
+        return ERR_MEM;
+    }
+    msg->type = TCPIP_MSG_CALLBACK;
+    msg->msg.cb.function = func;
+    msg->msg.cb.ctx = ctx;
+    if(block)
+    {
+        sys_mbox_post(&mbox, msg);
+    }
+    else
+    {
+        if((sys_mbox_trypost(&mbox, msg)) != ERR_OK)
+        {
+            memp_free(MEMP_TCPIP_MSG_API, msg);
+            myloge("sys_mbox_trypost failed");
+            return ERR_MEM;
+        }
+    }
+    return ERR_OK;
 }
 void tcpip_init(tcpip_init_done_fn initfunc, void *arg)
 {

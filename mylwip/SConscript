@@ -11,7 +11,10 @@ src/api/netifapi.c
 src/api/netdb.c
 src/core/def.c
 src/core/timeouts.c
-
+src/core/mem.c
+src/core/init.c
+src/core/memp.c
+src/core/pbuf.c
 """)
 
 ipv4_src = Split("""

@@ -199,7 +199,7 @@
 #define DEFAULT_TCP_RECVMBOX_SIZE   10
 
 
-#define LWIP_ARP                    1
+#define LWIP_ARP                    0// 1
 #define ARP_TABLE_SIZE              10
 #define ARP_QUEUEING                1
 

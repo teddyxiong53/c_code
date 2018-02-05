@@ -68,6 +68,7 @@ static void tcpip_init_done_callback(void *arg)
          node != &(information->object_list);
          node = node->next)
     {
+        
         object = rt_list_entry(node, struct rt_object, list);
         device = (rt_device_t)object;
         if (device->type == RT_Device_Class_NetIf)
@@ -107,11 +108,13 @@ static void tcpip_init_done_callback(void *arg)
 
 
 extern int eth_system_device_init_private(void);
+
+
 int lwip_system_init(void)
 {
     rt_err_t rc;
-    struct rt_semaphore done_sem;
-	
+    
+	struct rt_semaphore done_sem;
     eth_system_device_init_private();
 
     /* set default netif to NULL */
@@ -159,10 +162,7 @@ void sys_init(void)
     /* nothing on RT-Thread porting */
 }
 
-void lwip_sys_init(void)
-{
-    lwip_system_init();
-}
+
 
 /*
  * Create a new semaphore
@@ -577,30 +577,6 @@ u32_t sys_now(void)
 }
 
 
-RT_WEAK
-void mem_init(void)
-{
-}
 
-void *mem_calloc(mem_size_t count, mem_size_t size)
-{
-    return rt_calloc(count, size);
-}
 
-void *mem_trim(void *mem, mem_size_t size)
-{
-    // return rt_realloc(mem, size);
-    /* not support trim yet */
-    return mem;
-}
-
-void *mem_malloc(mem_size_t size)
-{
-    return rt_malloc(size);
-}
-
-void  mem_free(void *mem)
-{
-    rt_free(mem);
-}
 
