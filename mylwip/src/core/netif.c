@@ -156,7 +156,43 @@ err_t netif_loop_output(struct netif *netif, struct pbuf *p)
     
     SYS_ARCH_UNPROTECT(lev);
 
-    //tcpip_callback_with_block((tcpip_callback_fn )netif_poll, netif, 0);
+    tcpip_callback_with_block((tcpip_callback_fn )netif_poll, netif, 0);
+}
+
+void netif_poll(struct netif *netif)
+{
+	SYS_ARCH_DECL_PROTECT(lev);
+
+	SYS_ARCH_PROTECT(lev);
+	while(netif->loop_first != NULL)
+	{
+		struct pbuf *in, in_end;
+		in = in_end = netif->loop_first;
+		while(in_end->len != in_end->tot_len)
+		{
+			in_end = in_end->next;
+		}
+
+		if(in_end == netif->loop_last)
+		{
+			netif->loop_first = netif->loop_first = NULL;
+		}
+		else
+		{
+			netif->loop_first = in_end->next;
+		}
+		in_end->next = NULL;
+		SYS_ARCH_UNPROTECT(lev);
+		//this don't need protect
+		err_t err;
+		err = ip_input(in, netif);
+		if(err)
+		{
+			pbuf_free(in);
+		}
+		SYS_ARCH_PROTECT(lev);
+	}
+	SYS_ARCH_UNPROTECT(lev);
 }
 static err_t netif_loop_output_ipv4(struct netif *netif, struct pbuf *p, ip4_addr_t *addr)
 {

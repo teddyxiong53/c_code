@@ -19,7 +19,7 @@ static sys_mbox_t mbox;
 sys_mutex_t lock_tcpip_core;
 
 
-#if 1
+
 static void tcpip_thread(void *arg)
 {
     struct tcpip_msg *msg;
@@ -57,6 +57,18 @@ err_t  tcpip_input(struct pbuf *p, struct netif *inp)
     return 0;
 }
 
+
+err_t tcpip_send_msg_wait_sem
+(
+    tcpip_callback_fn fn,
+    void *apimsg,
+    sys_sem_t *sem
+)
+{
+    LOCK_TCPIP_CORE();
+    fn(apimsg);
+    UNLOCK_TCPIP_CORE();
+}
 err_t tcpip_callback_with_block
 (
     tcpip_callback_fn func,
@@ -113,4 +125,4 @@ void tcpip_init(tcpip_init_done_fn initfunc, void *arg)
     
 }
 
-#endif
+
