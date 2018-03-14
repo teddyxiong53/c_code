@@ -1,0 +1,36 @@
+#!/bin/bash
+
+
+RED="\\033[0;31m"
+NOCOLOR="\\033[0;39m"
+GREEN="\\033[0;32m"
+
+set -o errtrace
+
+
+
+sudo dmesg -n 7
+sudo rmmod ldt 2> /dev/null
+sudo dmesg -c > /dev/null
+
+# configure UART because it is used for demostration of the driver
+stty -F /dev/ttyS0 115200
+set -o errexit
+
+#
+# Check for presence looback on /dev/ttyS0.
+# If loopback is not present, switch loopback on in the driver
+#
+
+
+
+
+sudo insmod ldt.ko loopback=1
+
+sudo sh -c "chmod go+rw /dev/ldt*"
+data=123rw
+
+
+
+
+
