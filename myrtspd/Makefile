@@ -12,7 +12,7 @@ LDFLAGS := -lpthread
 DEFINES := 
 INCLUDE :=
 
-INCLUDE += -I./src/include -I./src/src -I./src/temp
+INCLUDE += -I./src/include -I./src/src 
 
 CFLAGS := -g -Wall $(DEFINES) $(INCLUDE)
 #CXXFLAGS := $(CFLAGS) -DHAVE_CONFIG_H
