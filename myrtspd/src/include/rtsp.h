@@ -23,6 +23,13 @@
 
 #define RTSP_EL "\r\n"
 #define RTSP_VER "RTSP/1.0"
+#define HDR_REQUIRE "Require"
+#define HDR_ACCEPT "Accept"
+#define PACKAGE "rtspd"
+#define VERSION "1.0"
+#define SDP_EL "\r\n"
+#define HDR_TRANSPORT "Transport"
+#define HDR_SESSION "Session"
 
 
 struct rtsp_port {
@@ -84,7 +91,8 @@ struct rtsp_buffer {
 };
 
 extern struct rtsp_buffer *rtsp[MAX_CONN];
-
+extern pthread_cond_t rtspd_cond;
+extern pthread_mutex_t rtspd_mutex;
 int rtsp_init_buffer(void);
 
 #endif //__RTSP_H__

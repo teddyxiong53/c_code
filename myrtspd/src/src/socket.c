@@ -6,11 +6,12 @@ static int socket_really_proc_accept(void)
 {
     int cli_len;
     int conn_num;
-    conn_num = rtsp_get_free_num();
+    conn_num = 0;//rtsp_get_free_num_nowait();
     if(conn_num < 0) {
         myloge("no free conn buffer");
         return -1;
     }
+	mylogd("conn_num:%d", conn_num);
     struct rtsp_buffer *rb;
     rb = rtsp[conn_num];
     rb->cli_rtsp.conn_num = conn_num;
@@ -22,6 +23,16 @@ static int socket_really_proc_accept(void)
         perror("accept fail");
         return -1;
     }
+	mylogd("rb->cli_rtsp.cli_fd:%d",rb->cli_rtsp.cli_fd);
+	mylogd("[0]:%d",rtsp[0]->cli_rtsp.cli_fd);
+	mylogd("[1]:%d",rtsp[1]->cli_rtsp.cli_fd);
+	strcpy(rtsp[conn_num]->cli_rtsp.cli_host, inet_ntoa(cli_addr.sin_addr));
+
+	pthread_mutex_lock(&rtspd_mutex);
+	pthread_cond_signal(&rtspd_cond);
+	pthread_mutex_unlock(&rtspd_mutex);
+	mylogd("accept client conn. fd:%d, host:%s", rb->cli_rtsp.cli_fd,
+		rtsp[conn_num]->cli_rtsp.cli_host);
     return 0;
 }
 
@@ -30,6 +41,7 @@ static void *socket_proc_accept(void *arg)
 {
     pthread_detach(pthread_self());
     while(1) {
+		mylogd("waiting connect");
         socket_really_proc_accept();
     }
     pthread_exit(NULL);
@@ -41,7 +53,9 @@ int socket_tcp_read(int fd, void *buf, int len)
     char *p = (char *)buf;
     int bytes_left = len;
     while(1) {
-        read_bytes = read(fd, p, bytes_left);
+		mylogd("before read");
+		read_bytes = read(fd, p, bytes_left);
+		mylogd("after read:%d", read_bytes);
         if(read_bytes < 0) {
             if(errno == EINTR) {
                 continue;

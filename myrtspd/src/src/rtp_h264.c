@@ -62,7 +62,7 @@ int build_rtp_header(struct rtp_header *hdr, int conn_num)
     rtsp[conn_num]->cmd_port.timestamp += rtsp[conn_num]->cmd_port.frame_rate_step;
     hdr->timestamp = htonl(rtsp[conn_num]->cmd_port.timestamp);
     hdr->ssrc = htonl(rtsp[conn_num]->cmd_port.ssrc);
-
+	return 0;
 }
 
 int udp_write(int len, int conn_num)
@@ -80,7 +80,11 @@ int build_rtp_nalu(u8 *buf, int frame_size, int conn_num)
     char *nalu_buffer;
     nalu_buffer = rtsp[conn_num]->nalu_buffer;
     struct rtp_header rtp_hdr;
-
+	int fu_end;
+    char fu_header;
+    int fu_start;
+	char nalu_header;
+	char fu_indic;
     build_rtp_header(&rtp_hdr, conn_num);
     int data_left = frame_size - NALU_INDIC_SIZE;
     char *p_nalu_data = buf + NALU_INDIC_SIZE;
@@ -93,13 +97,11 @@ int build_rtp_nalu(u8 *buf, int frame_size, int conn_num)
         usleep(DE_TIME);
         return 0;
     }
-    char nalu_header = buf[4];
-    char fu_indic = (nalu_header & 0xe0) | 28;
+    nalu_header = buf[4];
+    fu_indic = (nalu_header & 0xe0) | 28;
     data_left -= NALU_HEADER_SIZE;
     p_nalu_data += NALU_HEADER_SIZE;
-    int fu_end;
-    char fu_header;
-    int fu_start;
+    
     while(data_left > 0) {
         int proc_size = MIN(data_left, SLICE_NALU_DATA_MAX);
         int rtp_size = proc_size + RTP_HEADER_SIZE + FU_A_HEAD_SIZE 
@@ -133,8 +135,9 @@ int build_rtp_nalu(u8 *buf, int frame_size, int conn_num)
 int rtp_send_packet(int conn_num )
 {
     FILE *infile;
+	mylogd("filename:%s", rtsp[0]->filename);
     infile = fopen(rtsp[0]->filename, "rb");
-    if(infile) {
+    if(!infile) {
         myloge("fopen fail");
         return -1;
     }

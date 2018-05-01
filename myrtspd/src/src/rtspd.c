@@ -5,6 +5,8 @@
 #include "rtcp.h"
 
 sem_t rtspd_lock[MAX_CONN];
+pthread_cond_t rtspd_cond;
+pthread_mutex_t rtspd_mutex;
 
 int rtspd_basic_init(void)
 {
@@ -16,10 +18,11 @@ int rtspd_basic_init(void)
     }
     int i;
     for(i=0; i<MAX_CONN; i++) {
-        sem_init(&rtspd_lock, 0, 1);
+        sem_init(&rtspd_lock, 0, 0);
     }
-    
-    
+    pthread_mutex_init(&rtspd_mutex, NULL);
+    pthread_cond_init(&rtspd_cond, NULL);
+	
     return 0;
 }
 
@@ -88,6 +91,8 @@ int rtspd_status(int conn_num)
 static rtspd_rtp_init(int conn_num)
 {
     int ret;
+	sem_wait(&rtspd_lock[conn_num]);
+	
     ret = rtspd_status(conn_num);
     if(ret != 8) {
         myloge("status is not right. status:%d", ret);
@@ -299,6 +304,17 @@ void *rtspd_rtp_send_file(void *arg)
     
 }
 extern void *rtsp_proc(void *arg);
+
+int rtspd_rtsp_init(int conn_num)
+{
+	int ret;
+	ret = pthread_create(&rtsp[conn_num]->pth.rtsp_vthread, NULL, rtsp_proc, (void *)conn_num);
+    if(ret) {
+        myloge("pthread create fail");
+        return -1;
+    }
+	return 0;
+}
 int main(int argc, char **argv)
 {
     int ret;
@@ -306,17 +322,24 @@ int main(int argc, char **argv)
     if(ret) {
         return -1;
     }
+    //ret = rtspd_port_init("127.0.0.1", 554);
     ret = rtspd_port_init("192.168.190.137", 554);
     if(ret) {
+		myloge("rtspd_port_init fail");
         return -1;
     }
     int conn_num = rtsp_get_free_num();
     mylogd("conn_num:%d", conn_num);
-
+	if(conn_num < 0) {
+		myloge("no free conn");
+		return -1;
+	}
+	
     rtspd_set_framerate(25, conn_num);
-    ret = pthread_create(&rtsp[conn_num]->pth.rtsp_vthread, NULL, rtsp_proc, (void *)conn_num);
-    if(ret) {
-        myloge("pthread create fail");
+
+	ret = rtspd_rtsp_init(conn_num);
+	if(ret) {
+        myloge("rtspd_rtsp_init fail");
         return -1;
     }
 	ret = rtspd_rtp_init(conn_num);
