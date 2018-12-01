@@ -32,9 +32,9 @@ def walk_children(child):
 	global source_list
 	
 	
-def MakeCopy(program, BSP_ROOT, RTT_ROOT, Env):
-	global source_list
-	target_path = os.path.join(BSP_ROOT, "rt-thread")
+# def MakeCopy(program, BSP_ROOT, RTT_ROOT, Env):
+	# global source_list
+	# target_path = os.path.join(BSP_ROOT, "rt-thread")
 	
-	for item in program:
+	# for item in program:
 		

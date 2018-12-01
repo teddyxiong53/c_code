@@ -1,0 +1,16 @@
+menu "rt-thread kernel"
+
+config RT_NAME_MAX
+    int "the max size of kernel object name"
+    range 2 32
+    default 8
+    help    
+        name max size
+        
+menu "inter thread communication"
+config CONFIG_USING_SEMAPHORE
+	bool "enable sem"
+	default y
+endmenu
+endmenu
+

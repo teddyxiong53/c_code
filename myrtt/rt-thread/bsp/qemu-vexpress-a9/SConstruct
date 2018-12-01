@@ -1,4 +1,6 @@
 import os, sys, rtconfig
+import pdb
+#pdb.set_trace()
 
 RTT_ROOT = os.path.normpath(os.getcwd() + "/../..")
 
@@ -9,11 +11,11 @@ from building import *
 TARGET = "rtthread." + rtconfig.TARGET_EXT
 
 env = Environment(tools=['mingw'],
-	AS = rtconfig.AS, ASFLAGS = rtconfig.ASFLAGS,
-	CC = rtconfig.CC, CCFLAGS = rtconfig.CCFLAGS,
+	AS = rtconfig.AS, ASFLAGS = rtconfig.AFLAGS,
+	CC = rtconfig.CC, CCFLAGS = rtconfig.CFLAGS,
 	CXX = rtconfig.CXX, CXXFLAGS = rtconfig.CXXFLAGS,
-	AR = rtconfig.AR, ARFLAGS = rtconfig.ARFLAGS,
-	LINK = rtconfig.LINK, LINKFLAGS = rtconfig.LINKFLAGS
+	AR = rtconfig.AR, ARFLAGS = '-rc',
+	LINK = rtconfig.LINK, LINKFLAGS = rtconfig.LFLAGS
 )
 
 env.PrependENVPath("PATH", rtconfig.EXEC_PATH)

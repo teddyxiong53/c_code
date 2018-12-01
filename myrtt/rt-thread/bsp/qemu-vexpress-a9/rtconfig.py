@@ -9,6 +9,7 @@ PLATFORM = "gcc"
 
 BUILD = "debug"
 
+EXEC_PATH = '/bin'
 PREFIX = "arm-none-eabi-"
 CC = PREFIX + "gcc"
 CXX = PREFIX + "g++"
