@@ -6,10 +6,46 @@
 /* rt-thread kernel */
 
 #define RT_NAME_MAX 8
+#define RT_ALIGN_SIZE 4
+/* RT_THREAD_PRIORITY_8 is not set */
+#define RT_THREAD_PRIORITY_32
+/* RT_THREAD_PRIORITY_256 is not set */
+#define RT_THREAD_PRIORITY_MAX 32
+#define RT_TICK_PER_SECOND 100
+#define RT_DEBUG
+#define RT_USING_OVERFLOW_CHECK
+#define RT_DEBUG_INIT 0
+#define RT_DEBUG_THREAD 0
+#define RT_USING_HOOK
+#define IDLE_THREAD_STACK_SIZE 256
+/* RT_USING_TIMER_SOFT is not set */
 
 /* inter thread communication */
 
-#define CONFIG_USING_SEMAPHORE
+#define RT_USING_SEMAPHORE
+#define RT_USING_MUTEX
+#define RT_USING_EVENT
+#define RT_USING_MAILBOX
+#define RT_USING_MESSAGEQUEUE
+/* RT_USING_SIGNALS is not set */
+
+/* memory management */
+
+#define RT_USING_MEMPOOL
+/* RT_USING_MEMHEAP is not set */
+/* RT_USING_HEAP is not set */
+#define RT_USING_SMALL_MEM
+/* RT_USING_SLAB is not set */
+/* RT_USING_MEMTRACE is not set */
+
+/* kernel device object  */
+
+#define RT_USING_DEVICE
+/* RT_USING_INTERRUPT_INFO is not set */
+#define RT_USING_CONSOLE
+#define RT_CONSOLEBUF_SIZE 128
+#define RT_CONSOLE_DEVICE_NAME "uart"
+/* RT_USING_MODULE is not set */
 
 /* rt-thread components */
 
