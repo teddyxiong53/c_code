@@ -100,7 +100,7 @@ typedef int (*init_fn_t)(void);
 
 
 //error code
-#define RT_OK	0
+#define RT_EOK	0
 #define RT_ERROR	1
 #define RT_ETIMEOUT		2
 #define	 RT_EFULL 	3
@@ -202,11 +202,90 @@ struct rt_thread {
 	rt_uint8_t current_priority;
 	rt_uint8_t init_priority;
 	
+	rt_uint8_t number;
+	rt_uint8_t high_mask;
 	
+	rt_uint32_t number_mask;
+	
+	rt_uint32_t event_set;
+	rt_uint8_t event_info;
+	
+	rt_ubase_t init_tick;
+	rt_ubase_t remaining_tick;
+	
+	struct rt_timer thread_timer;
+	
+	void (*cleanup)(struct rt_thread *tid);
+	
+	rt_uint32_t user_data;
 	
 	
 };
 
+typedef struct rt_thread * rt_thread_t;
+
+
+//ipc 
+
+#define RT_IPC_FLAG_FIFO 0X00
+#define RT_IPC_FLAG_PRIO 0X01
+
+
+
+struct rt_ipc_object {
+	struct rt_object parent;
+	rt_list_t suspend_thread;	
+};
+
+struct rt_semaphore {
+	struct rt_ipc_object parent;
+	rt_uint16_t value;
+};
+typedef struct rt_semaphore *rt_sem_t;
+
+
+enum rt_device_class_type {
+	RT_Device_Class_Char = 0,
+	RT_Device_Class_Block,
+	
+	RT_Device_Class_Unknown
+};
+
+#define RT_DEVICE_FLAG_RDONLY 0X001
+#define RT_DEVICE_FLAG_WRONLY 0X002
+#define RT_DEVICE_FLAG_RDWR   0X003
+
+#define RT_DEVICE_FLAG_REMOVABLE  0X004
+#define RT_DEVICE_FLAG_STANDALONE 0X008
+
+
+#define RT_DEVICE_OFLAG_CLOSE 0x000
+#define RT_DEVICE_OFLAG_RDONLY 0X001
+#define RT_DEVICE_OFLAG_WRONLY 0X002
+#define RT_DEVICE_OFLAG_RDWR  0X003
+#define RT_DEVICE_OFLAG_OEPN  0X008
+#define RT_DEVICE_OFLAG_MASK 0Xf0f
+struct rt_device {
+	struct rt_object parent;
+	enum rt_device_class_type type;
+	rt_uint16_t flag;
+	rt_uint16_t open_flag;
+	rt_uint8_t ref_count;
+	rt_uint8_t device_id;
+	
+	rt_err_t (*rx_indicate)(rt_device_t dev, rt_size_t size);
+	rt_err_t (*tx_complete)(rt_device_t dev, void *buffer);
+	
+	rt_err_t (*init)(rt_device_t dev);
+	rt_err_t (*open)(rt_device_t dev, rt_uint16_t oflag);
+	rt_err_t (*close)(rt_device_t dev);
+	rt_size_t (*read)(rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size);
+	rt_size_t (*write)(rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size);
+	rt_err_t (*control)(rt_device_t dev, int cmd, void *args);
+	
+	void *user_data;
+};
+typedef struct rt_device *rt_device_t;
 
 #ifdef __cplusplus
 }
