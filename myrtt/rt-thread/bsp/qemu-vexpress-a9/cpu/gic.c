@@ -1,3 +1,7 @@
+#include <rtthread.h>
+#include <rthw.h>
+#include "realview.h"
+
 
 struct arm_gic {
 	rt_uint32_t offset;
@@ -85,4 +89,22 @@ int arm_gic_cpu_init(rt_uint32_t index, rt_uint32_t cpu_base)
 	//enable cpu interrupt
 	GIC_CPU_CTRL(cpu_base) = 0x01;
 	return 0;
+}
+
+int arm_gic_get_active_irq(rt_uint32_t index)
+{
+	int irq;
+	irq = GIC_CPU_INTACK(_gic_table[index].cpu_hw_base);
+	irq += _gic_table[index].offset;
+	return irq;
+}
+
+void arm_gic_ack(rt_uint32_t index, int irq)
+{
+	rt_uint32_t mask = 1<<(irq%32);
+	irq = irq - _gic_table[index].offset;
+	GIC_DIST_ENABLE_CLEAR(_gic_table[index].dist_hw_base, irq) = mask;
+	GIC_CPU_EOI(_gic_table[index].cpu_hw_base) = irq;
+	GIC_DIST_ENABLE_SET(_gic_table[index].dist_hw_base, irq) = mask;
+	
 }

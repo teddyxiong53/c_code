@@ -1,6 +1,8 @@
 #ifndef __RT_DEF_H__
 #define __RT_DEF_H__
 
+#include <rtconfig.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -167,6 +169,20 @@ struct rt_object_information {
 	rt_size_t object_size;
 };
 
+#define RT_TIMER_SKIP_LIST_LEVEL 1
+
+//timer
+struct rt_timer {
+	struct rt_object parent;
+	rt_list_t row[RT_TIMER_SKIP_LIST_LEVEL];
+	void (*timeout_func)(void *parameter);
+	void *parameter;
+	rt_tick_t init_tick;
+	rt_tick_t timeout_tick;
+};
+typedef struct rt_timer *rt_timer_t;
+
+
 //thread
 
 //thread state
@@ -257,6 +273,9 @@ enum rt_device_class_type {
 
 #define RT_DEVICE_FLAG_REMOVABLE  0X004
 #define RT_DEVICE_FLAG_STANDALONE 0X008
+#define RT_DEVICE_FLAG_ACTIVATED  0x010
+#define RT_DEVICE_FLAG_SUSPENDED	0X020
+#define RT_DEVICE_FLAG_STREAM 0x040
 
 
 #define RT_DEVICE_OFLAG_CLOSE 0x000
@@ -265,6 +284,9 @@ enum rt_device_class_type {
 #define RT_DEVICE_OFLAG_RDWR  0X003
 #define RT_DEVICE_OFLAG_OEPN  0X008
 #define RT_DEVICE_OFLAG_MASK 0Xf0f
+
+
+typedef struct rt_device *rt_device_t;
 struct rt_device {
 	struct rt_object parent;
 	enum rt_device_class_type type;
@@ -285,7 +307,6 @@ struct rt_device {
 	
 	void *user_data;
 };
-typedef struct rt_device *rt_device_t;
 
 #ifdef __cplusplus
 }

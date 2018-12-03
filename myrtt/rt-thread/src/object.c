@@ -17,7 +17,7 @@ static struct rt_object_information rt_object_container[RT_Object_Class_Unknown]
 };
 
 struct rt_object_information *rt_object_get_information(
-	enum rt_object_class_type
+	enum rt_object_class_type type
 )
 {
 	int index;

@@ -1,6 +1,8 @@
 #ifndef __RT_HW_H__
 #define __RT_HW_H__
 
+#include <rtdef.h>
+
 #define HWREG32(x)          (*((volatile rt_uint32_t *)(x)))
 #define HWREG16(x)          (*((volatile rt_uint16_t *)(x)))
 #define HWREG8(x)           (*((volatile rt_uint8_t *)(x)))

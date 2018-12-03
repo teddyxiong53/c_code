@@ -9,10 +9,10 @@ rt_uint32_t rt_interrupt_from_thread;
 rt_uint32_t rt_interrupt_to_thread;
 rt_uint32_t rt_thread_switch_interrupt_flag;
 
-
+extern volatile rt_uint8_t rt_interrupt_nest;
 extern int system_vectors;
 
-statci rt_hw_vector_init()
+static rt_hw_vector_init()
 {
 	rt_cpu_vector_set_base((unsigned int)&system_vectors);
 }

@@ -109,7 +109,7 @@ rt_inline unsigned int rt_slist_len(const rt_list_t *l)
 	return len;
 }
 
-rt_inline rt_slist_t *rt_list_remove(rt_slist_t *l, rt_slist_t *n)
+rt_inline rt_slist_t *rt_slist_remove(rt_slist_t *l, rt_slist_t *n)
 {
 	struct rt_slist_node *node = l;
 	while(node->next && node->next != n) {

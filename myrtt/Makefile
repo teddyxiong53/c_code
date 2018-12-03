@@ -31,7 +31,7 @@ config:
 	scons --menuconfig -C $(BSP_DIR)
 
 build:
-	scons  -C $(BSP_DIR)
+	scons  -C $(BSP_DIR) --verbose
 
 clean:
 	scons -c -C $(BSP_DIR)

@@ -30,7 +30,7 @@ rt_size_t rt_strlen(const char *s)
 	return sc -s;
 	
 }
-#define isdigit(c)  (unsigned((c)-'0') <10)
+#define isdigit(c)  ((unsigned)((c) - '0') <10)
 
 rt_inline rt_int32_t divide(rt_int32_t *n, rt_int32_t base)
 {
@@ -177,11 +177,14 @@ rt_device_t rt_console_set_device(const char *name)
 	rt_device_t old, new;
 	old = _console_device;
 	new = rt_device_find(name);
-	if(new != NULL) {
+	if(new != RT_NULL) {
 		if(_console_device != RT_NULL) {
 			rt_device_close(_console_device);
 		}
+		rt_device_open(new, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_STREAM);
+		_console_device = new;
 	}
+	return old;
 }
 
 
@@ -195,6 +198,7 @@ rt_int32_t rt_vsnprintf(char *buf, rt_size_t size, const char *fmt, va_list args
 	int precision;
 	char *end;
 	const char *s;
+	char c;
 	int i, len;
 	end = buf + size - 1;
 	if(end < buf) {
@@ -320,7 +324,7 @@ rt_int32_t rt_vsnprintf(char *buf, rt_size_t size, const char *fmt, va_list args
 				field_width = sizeof(void *)<<1;
 				flags |= ZEROPAD;
 			}
-			str = print_number(str, end, (long)va_arg(args, void*), 16, field_width, precision);
+			str = print_number(str, end, (long)va_arg(args, void*), 16, field_width, precision, flags);
 			continue;
 		case '%':
 			if(str <= end) {
@@ -407,5 +411,12 @@ void rt_kprintf(const char *fmt, ...)
 		_console_device->open_flag = old_flag;
 	}
 	va_end(args);
+}
+
+void rt_show_version()
+{
+	rt_kprintf("rt-thread, version:%d.%d.%d build %s", RT_VERION, RT_SUBVERSION,
+		RT_REVISION, __DATE__);
+	
 }
 
