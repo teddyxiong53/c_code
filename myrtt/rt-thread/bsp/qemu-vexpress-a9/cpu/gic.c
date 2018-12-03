@@ -108,3 +108,11 @@ void arm_gic_ack(rt_uint32_t index, int irq)
 	GIC_DIST_ENABLE_SET(_gic_table[index].dist_hw_base, irq) = mask;
 	
 }
+
+void arm_gic_umask(rt_uint32_t index, int irq)
+{
+	rt_uint32_t mask = 1<< (irq%32);
+	irq = irq - _gic_table[index].offset;
+	GIC_DIST_ENABLE_SET(_gic_table[index].dist_hw_base, irq) = mask;
+}
+

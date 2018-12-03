@@ -34,3 +34,9 @@ void rt_hw_interrupt_init()
 	rt_thread_switch_interrupt_flag = 0;
 	
 }
+
+
+void rt_hw_interrupt_umask(int vector)
+{
+	arm_gic_umask(0, vector);
+}
