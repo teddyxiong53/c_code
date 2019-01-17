@@ -123,6 +123,57 @@ int main(int argc, char const *argv[])
     //pub qos 0
     mqtt_publish(&broker, "hello", "example qos 0", 0);
 
+    //pub qos 1
+    mylogd("pub qos 1");
+    mqtt_publish_with_qos(&broker, "hello", "example qos 1", 0, 1, &msg_id);
+    packet_length = read_packet(1);
+    if(packet_length < 0) {
+        myloge("read packet fail");
+        return -1;
+    }
+    if(MQTTParseMessageType(packet_buffer) != MQTT_MSG_PUBACK) {
+        myloge("message type is not pub ack");
+        return -1;
+    }
+    msg_id_rcv = mqtt_parse_msg_id(packet_buffer);
+    if(msg_id != msg_id_rcv) {
+        myloge("message id is not right, msg id:%x, recv msg id:%x", msg_id, msg_id_rcv);
+        return -1;
+    }
+    //pub qos 2
+    mylogd("pub qos 2");
+    mqtt_publish_with_qos(&broker, "hello", "example qos 2", 0, 2, &msg_id);
+    packet_length = read_packet(1);
+    if(packet_length < 0) {
+        myloge("read packet fail");
+        return -1;
+    }
+    if(MQTTParseMessageType(packet_buffer) != MQTT_MSG_PUBREC) {
+        myloge("pub rec expected");
+        return -1;
+    }
+    msg_id_rcv = mqtt_parse_msg_id(packet_buffer);
+    if(msg_id != msg_id_rcv) {
+        myloge("message id is not right, msg id:%x, recv msg id:%x", msg_id, msg_id_rcv);
+        return -1;
+    }
+    mqtt_pubrel(&broker, msg_id);
+    //get pub comp
+    packet_length = read_packet(1);
+    if(packet_length < 0) {
+        myloge("read packet fail");
+        return -1;
+    }
+    if(MQTTParseMessageType(packet_buffer) != MQTT_MSG_PUBCOMP) {
+        myloge("msg pub comp expected");
+        return -1;
+    }
+    msg_id_rcv = mqtt_parse_msg_id(packet_buffer);
+    if(msg_id != msg_id_rcv) {
+        myloge("msg id not right");
+        return -1;
+    }
+
     mqtt_disconnect(&broker);
     close_socket(&broker);
     return 0;

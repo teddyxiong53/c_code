@@ -193,3 +193,44 @@ int mqtt_disconnect(mqtt_broker_handle_t *broker)
     return 0;
 }
 
+uint8_t mqtt_num_rem_len_bytes(const char *buf)
+{
+    return 1;
+}
+
+uint16_t mqtt_parse_msg_id(const uint8_t *buf)
+{
+    uint8_t type = MQTTParseMessageType(buf);
+    uint8_t qos = MQTTParseMessageQos(buf);
+    uint16_t id = 0;
+    if(type >= MQTT_MSG_PUBLISH && type <= MQTT_MSG_UNSUBACK) {
+        if(type == MQTT_MSG_PUBLISH) {
+            if(qos != 0) {
+
+            }
+        } else {
+            uint8_t rlb = mqtt_num_rem_len_bytes(buf);
+            id = *(buf+1+rlb)<<8;
+            id |= *(buf+1+rlb+1);
+
+        }
+    }
+    return id;
+}
+
+int mqtt_pubrel(mqtt_broker_handle_t *broker, uint16_t message_id)
+{
+    uint8_t packet[] = {
+        MQTT_MSG_PUBREL | MQTT_QOS1_FLAG,
+        0X02,
+        message_id >>8,
+        message_id & 0xff
+    };
+    int ret;
+    ret = broker->send(broker->socket_info, packet, sizeof(packet));
+    if(ret != sizeof(packet)) {
+        myloge("send fail");
+        return -1;
+    }
+    return 0;
+}
