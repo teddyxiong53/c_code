@@ -195,7 +195,17 @@ int mqtt_disconnect(mqtt_broker_handle_t *broker)
 
 uint8_t mqtt_num_rem_len_bytes(const char *buf)
 {
-    return 1;
+    uint8_t num_bytes = 1;
+    if((buf[1] & 0x80) == 0x80) {
+        num_bytes ++;
+        if((buf[2] & 0x80) == 0x80)) {
+            num_bytes ++;
+            if((buf[3] & 0x80) == 0x80) {
+                num_bytes++;
+            }
+        }
+    }
+    return num_bytes;
 }
 
 uint16_t mqtt_parse_msg_id(const uint8_t *buf)
@@ -233,4 +243,98 @@ int mqtt_pubrel(mqtt_broker_handle_t *broker, uint16_t message_id)
         return -1;
     }
     return 0;
+}
+
+uint16_t mqtt_parse_rem_len(const uint8_t *buf)
+{
+    buf++;//skip flags field
+    uint8_t digit;
+    uint16_t value = 0;
+    uint16_t multiplier = 1;
+    do {
+        digit = *buf;
+        value += (digit & 0x7f)*multiplier;
+        multiplier *= 128;
+        buf++;
+    } while((digit&0x80)!=0);
+    return value;
+}
+
+int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic, uint16_t *message_id)
+{
+    uint16_t topiclen = strlen(topic);
+    uint8_t var_header[2];
+    var_header[0] = broker->seq>>8;
+    var_header[1] = broker->seq&0xff;
+    if(message_id) {
+        *message_id = broker->seq;
+    }
+    broker->seq ++;
+    uint8_t utf_topic[topiclen+3];//size: 2 bytes, 1 byte: qos
+    memset(utf_topic, 0,sizeof(utf_topic));
+    utf_topic[0] = topiclen>>8;
+    utf_topic[1] = topiclen&0xff;
+    memcpy(utf_topic+2, topic, topiclen);
+    uint8_t fixed_header[] = {
+        MQTT_MSG_SUBCRIBE | MQTT_QOS1_FLAG,
+        sizeof(var_header) + sizeof(utf_topic)
+    };
+    uint8_t packet[sizeof(fixed_header) + sizeof(var_header) + sizeof(utf_topic)];
+    memcpy(packet, fixed_header, sizeof(fixed_header));
+    memcpy(packet+sizeof(fixed_header), var_header, sizeof(var_header));
+    memcpy(packet+sizeof(fixed_header)+sizeof(var_header), utf_topic, sizeof(utf_topic));
+    int ret;
+    ret = broker->send(broker->socket_info, packet, sizeof(packet));
+    if(ret < 0) {
+        myloge("send fail");
+        return -1;
+    }
+    return 0;
+
+}
+
+uint16_t mqtt_parse_pub_topic(const uint8_t *buf, uint8_t *topic)
+{
+    const uint8_t *ptr;
+    uint16_t topic_len = mqtt_parse_pub_topic_ptr(buf, &ptr);
+    if(topic_len != 0 && ptr!=NULL) {
+        memcpy(topic, ptr, topic_len);
+    }
+    return topic_len;
+}
+
+
+uint16_t mqtt_parse_pub_topic_ptr(const uint8_t *buf, const uint8_t **topic_ptr)
+{
+    uint16_t len = 0;
+    if(MQTTParseMessageType(buf) == MQTT_MSG_PUBLISH) {
+        uint8_t rlb = mqtt_num_rem_len_bytes(buf);
+        len = *(buf+1+rlb)<<8;
+        len |= *(buf+1+rlb+1);
+        *topic_ptr = (buf + 1+rlb+2);
+    } else {
+        *topic_ptr = NULL;
+    }
+    return len;
+}
+
+uint16_t mqtt_parse_publish_msg(const uint8_t *buf, uint8_t *msg)
+{
+    const uint8_t *ptr;
+    uint16_t msg_len = mqtt_parse_publish_msg_ptr(buf, &ptr);
+    if(msg_len != 0 && ptr != NULL) {
+        memcpy(msg, ptr, msg_len);
+    }
+    return msg_len;
+}
+
+uint16_t mqtt_parse_publish_msg_ptr(const uint8_t *buf, const uint8_t **msg_ptr)
+{
+    uint16_t len = 0;
+    if(MQTTParseMessageType(buf) == MQTT_MSG_PUBLISH) {
+        uint8_t rlb = mqtt_num_rem_len_bytes(buf);
+
+    } else {
+        *msg_ptr = NULL;
+    }
 }
