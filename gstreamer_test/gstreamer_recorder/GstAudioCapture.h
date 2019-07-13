@@ -5,7 +5,7 @@
 #include <memory>
 #include <gst/gst.h>
 #include "GstRecorder.h"
-
+#include "AudioCapture.h"
 
 
 class GstAudioCapture :

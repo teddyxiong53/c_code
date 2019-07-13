@@ -149,5 +149,3 @@ exit:
 	return GST_FLOW_OK;
 }
 
-}
-}

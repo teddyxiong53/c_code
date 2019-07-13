@@ -40,14 +40,14 @@ void GstAudioCapture::onStreamData(const int16_t *data, const size_t length)
 bool GstAudioCapture::startAudioInput(const std::function<ssize_t(const int16_t*, const size_t)> &listener)
 {
 	m_listener = listener;
-	AACE_DEBUG(LX(TAG, "play"));
+	//AACE_DEBUG(LX(TAG, "play"));
 	m_recorder->play();
 	return true;
 }
 
 bool GstAudioCapture::stopAudioInput()
 {
-	AACE_DEBUG(LX(TAG, "stop"));
+	//AACE_DEBUG(LX(TAG, "stop"));
 	m_recorder->stop();
 	return true;
 }
