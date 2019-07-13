@@ -17,6 +17,7 @@
 #include "GstMediaPlayer.h"
 #include <iostream>
 #include <fstream>
+#include "mylog.h"
 
 #define AACE_ERROR(...)
 #define AACE_DEBUG(...)
@@ -82,7 +83,7 @@ GstMediaPlayer::GstMediaPlayer(const StreamType &type, const std::string &name, 
 bool GstMediaPlayer::init()
 {
 	AACE_DEBUG(LX(TAG, "init"));
-
+    mylogd("");
 	m_player = GstPlayer::create(m_name, m_device);
 	if (!m_player)
 		return false;
@@ -95,18 +96,19 @@ bool GstMediaPlayer::init()
 
 void GstMediaPlayer::onStreamStart() {
 	AACE_DEBUG(LX(TAG, "onStreamStart"));
+    mylogd("");
 }
 
 void GstMediaPlayer::onStreamEnd()
 {
 	AACE_DEBUG(LX(TAG, "onStreamEnd"));
-
+    mylogd("");
 }
 
 void GstMediaPlayer::onStreamError()
 {
 	AACE_ERROR(LX(TAG, "onStreamError"));
-
+    mylogd("");
 }
 
 void GstMediaPlayer::onStateChanged(GstState state)
@@ -160,6 +162,9 @@ void GstMediaPlayer::setURI(const std::string &uri)
 	m_player->setURI(m_currentURI);
 }
 
+/*
+    this is not used.
+ */
 bool GstMediaPlayer::prepare()
 {
 	AACE_DEBUG(LX(TAG, "prepare(stream)"));
@@ -167,9 +172,11 @@ bool GstMediaPlayer::prepare()
 	switch (m_type) {
 	case StreamType::MP3_FILE:
 		{
-			if (std::remove(m_tmpFile.c_str()) == 0)
+            mylogd("xxxxxxxxxxxxxx");
+			if (std::remove(m_tmpFile.c_str()) == 0) {
 				AACE_DEBUG(LX(TAG, "File successfully deleted").d("path", m_tmpFile));
-
+                mylogd("");
+            }
 			if (!writeStreamToFile(m_tmpFile))
 				return false;
 
@@ -203,12 +210,14 @@ bool GstMediaPlayer::prepare(const std::string &url)
 bool GstMediaPlayer::play()
 {
 	AACE_DEBUG(LX(TAG, "play"));
+    mylogd("");
 	m_player->play();
 	return true;
 }
 
 bool GstMediaPlayer::stop()
 {
+    mylogd("");
 	AACE_DEBUG(LX(TAG, "stop"));
 	m_stopRequested = true;
 	m_player->stop();
@@ -217,6 +226,7 @@ bool GstMediaPlayer::stop()
 
 bool GstMediaPlayer::pause()
 {
+    mylogd("");
 	AACE_DEBUG(LX(TAG, "pause"));
 
 #ifdef USE_DUCKING
@@ -235,7 +245,7 @@ bool GstMediaPlayer::pause()
 bool GstMediaPlayer::resume()
 {
 	AACE_DEBUG(LX(TAG, "resume"));
-
+    mylogd("");
 #ifdef USE_DUCKING
 	setVolume(m_currentVolume);
 	// Note: MediaState must be changed to PLAYING regardless to the actual state.
@@ -251,7 +261,7 @@ bool GstMediaPlayer::resume()
 int64_t GstMediaPlayer::getPosition()
 {
 	AACE_DEBUG(LX(TAG, "getPosition"));
-
+    mylogd("");
 	int64_t pos = m_player->getPosition();
 	// Note: We update position only when it is non-zero
 	if (pos != 0) m_currentPosition = pos;
@@ -262,7 +272,7 @@ int64_t GstMediaPlayer::getPosition()
 bool GstMediaPlayer::setPosition(int64_t position)
 {
 	AACE_DEBUG(LX(TAG, "setPosition").d("position", position));
-
+    mylogd("");
 	if (position != 0 && !m_player->seek(position)) {
 		// Note: Seeking may fail when the pipeline is not in PLAYING state
 		// We will save the value and call setPosition again when it plays
@@ -281,7 +291,7 @@ bool GstMediaPlayer::setVolume(int8_t volume)
 	AACE_DEBUG(LX(TAG, "setVolume").d("volume", std::to_string(volume)));
 	// Update the saved value
 	m_currentVolume = volume;
-
+    mylogd("");
 	applyCurrentVolume();
 	return true;
 }
@@ -293,7 +303,7 @@ bool GstMediaPlayer::adjustVolume(int8_t delta)
 	m_currentVolume += delta;
 	if (m_currentVolume > AVS_VOLUME_MAX) m_currentVolume = AVS_VOLUME_MAX;
 	else if (m_currentVolume < AVS_VOLUME_MIN) m_currentVolume = AVS_VOLUME_MIN;
-
+    mylogd("");
 	applyCurrentVolume();
 	return true;
 }
@@ -301,7 +311,7 @@ bool GstMediaPlayer::adjustVolume(int8_t delta)
 void GstMediaPlayer::applyCurrentVolume()
 {
 	double volume = (double) m_currentVolume / (double) AVS_VOLUME_MAX;
-
+    mylogd("");
 	// Workaround for the known GStreamer issue (https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/416)
 	if (m_currentVolume == 0 && m_type == StreamType::RAW_STREAM)
 		volume = VOLUME_ZERO;
@@ -314,7 +324,7 @@ bool GstMediaPlayer::setMute(bool mute)
 {
 	// Update the saved value
 	m_currentMute = mute;
-
+    mylogd("");
 	// Workaround for the known GStreamer issue (https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/416)
 	if (m_type == StreamType::RAW_STREAM) {
 		if (m_currentMute)
@@ -330,11 +340,13 @@ bool GstMediaPlayer::setMute(bool mute)
 
 int8_t GstMediaPlayer::getVolume()
 {
+    mylogd("");
 	return m_currentVolume;
 }
 
 bool GstMediaPlayer::isMuted()
 {
+    mylogd("");
 	return m_currentMute;
 }
 
