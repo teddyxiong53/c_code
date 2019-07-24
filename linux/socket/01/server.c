@@ -3,6 +3,7 @@
 
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <arpa/inet.h> //这个必须要加上，不然会段错误。但是编译不会报错。这也是乱七八糟。
 
 #define PORT 8888
 #define BUF_SIZE 2048
