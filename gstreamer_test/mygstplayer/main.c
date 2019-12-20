@@ -4,6 +4,8 @@
 #include <string.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <fcntl.h>
 
 
 pthread_t g_player_pid;
@@ -11,6 +13,11 @@ gchar *g_filename;
 GstElement *g_pipeline;
 GMainContext *g_workerContext;
 GMainLoop *g_mainLoop;
+
+struct player_info {
+    int64_t pos;
+    int64_t duration;
+};
 
 void print_usage()
 {
@@ -23,15 +30,21 @@ void check_args(int argc, char **argv)
         exit(1);
     }
     g_filename = argv[1];
-
+    if(access(g_filename, F_OK) ) {
+        printf("%s file not exists\n", g_filename);
+        exit(1);
+    }
 }
 void print_menu()
 {
     printf("操作说明：\n");
-    printf("p -- 播放\n");
-    printf("s -- 暂停\n");
-    printf("j -- 快进10s\n");
-    printf("t -- 快退10s\n");
+    printf("b -- 播放\n");
+    printf("z -- 暂停\n");
+    printf("j -- 快进5s\n");
+    printf("t -- 快退5s\n");
+    printf("k -- 加快25%\n");
+    printf("m -- 减慢25%\n");
+    printf("x -- 查看文件信息\n");
 }
 gboolean   player_bus_callback (
     GstBus * bus, GstMessage * msg, gpointer user_data)
@@ -66,7 +79,7 @@ gboolean   player_bus_callback (
                     GST_OBJECT_NAME(msg->src),
                     gst_element_state_get_name(oldState),
                     gst_element_state_get_name(newState));
-                
+
             }
             break;
         default:
@@ -128,7 +141,66 @@ void player_pause()
         gst_element_set_state( g_pipeline, GST_STATE_PAUSED);
     }
 }
+void player_get_info(struct player_info *info)
+{
+    int64_t pos = 0;
+    gboolean ret = gst_element_query_position(g_pipeline, GST_FORMAT_TIME, &pos);
+    if(!ret) {
+        g_print("query position fail\n");
+        return;
+    }
+    g_print("current position:%lld\n", pos);
+    int64_t duration = 0;
+    ret = gst_element_query_duration(g_pipeline, GST_FORMAT_TIME, &duration);
+    if(!ret) {
+        g_print("get duration fail\n");
+        return ;
+    }
+    g_print("duration is:%lld\n", duration);
+    info->pos = pos;
+    info->duration = duration;
 
+}
+
+void player_step(int64_t secs)
+{
+    struct player_info info;
+    player_get_info(&info);
+    GstQuery *query;
+    int64_t start, end;
+    query = gst_query_new_seeking(GST_FORMAT_TIME);
+    gboolean seekable;
+    if(gst_element_query(g_pipeline, query)) {
+        gst_query_parse_seeking(query, NULL, &seekable, &start, &end);
+        if(seekable) {
+            g_print("seeking is enabled from %"GST_TIME_FORMAT"to %"GST_TIME_FORMAT" \n", GST_TIME_ARGS(start), GST_TIME_ARGS(end));
+            int64_t target = 0;
+            target = info.pos + secs*GST_SECOND;
+            if(target >= end) {
+                g_print("target is over end, set it to end\n");
+                target = end;
+            }
+            if(target <start) {
+                g_print("target is before start, set to to start\n");
+                target = start;
+            }
+            gst_element_seek(g_pipeline, 1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+                GST_SEEK_TYPE_SET, target, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+        } else {
+            g_print("file is not seekable\n");
+        }
+    } else {
+        g_print("seeking query fail\n");
+    }
+}
+
+/*
+    速度控制。
+*/
+void player_speed(int spd)
+{
+
+}
 void create_player_thread()
 {
     pthread_create(&g_player_pid, NULL, player_thread_proc, NULL);
@@ -152,6 +224,14 @@ int main(int argc, char **argv)
             break;
         } else if(c == 's') {
             player_pause();
+        } else if(c == 'j') {
+            player_step(5);
+        } else if(c == 't') {
+            player_step(-5);
+        } else if(c == 'k') {
+            player_speed(25);
+        } else if(c == 'm') {
+            player_speed(-25);
         }
     }
     g_print("out of main loop\n");
