@@ -6,6 +6,12 @@ cjson的用法示例。
 
 cmake的模板。
 
+# c_observer
+
+C语言实现的观察者模式。
+
+
+
 # dbus_test/
 
 dbus的用法示例。
